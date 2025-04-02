@@ -1,26 +1,23 @@
+import os
 from typing import Tuple
 
 from openai import OpenAI
-from pydantic import Field
+from together import Together
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv 
 
+# Carrega as variáveis de ambiente do arquivo .env
+load_dotenv()
 
 class AppConfig(BaseSettings):
     """
     Application configuration settings.
     """
 
-    llm_model: str = Field("qwen/qwen-vl-plus:free", description="LLM model to use")
-    base_url: str = Field(None, description="Base URL for the LLM API")
-    api_key: str = Field(None, description="API key for the LLM API")
-
-    class Config:
-        """
-        Configuration settings for the AppConfig class.
-        """
-
-        extra = "allow"
-        env_file = ".env"  # Optional: Use .env file to load settings
+    llm_model: str = os.getenv("LLM_MODEL", "")
+    base_url: str = os.getenv("BASE_URL", "")
+    api_key: str = os.getenv("OPENAI_API_KEY", "")
+    image_model_key: str = os.getenv("TOGETHER_API_KEY", "")
 
 
 def get_app_config() -> AppConfig:
@@ -47,3 +44,14 @@ def get_llm_client() -> Tuple[OpenAI, str]:
 
     client = OpenAI(base_url=config.base_url, api_key=config.api_key)
     return client, model
+
+
+def get_image_model_client() -> Together:
+    """
+    Get the image model client.
+    Returns:
+        Together: The image model client.
+    """
+    config = get_app_config()
+    client = Together(api_key=config.image_model_key)
+    return client
